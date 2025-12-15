@@ -15,8 +15,11 @@
  */
 
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import {Enhance} from '@enhance-eng/sandbox';
 
 import {AppModule} from './app/app.module';
+
+Enhance.init({});
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule, {

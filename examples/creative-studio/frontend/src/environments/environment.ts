@@ -16,19 +16,19 @@
 
 export const environment = {
   firebase: {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',
-    messagingSenderId: '',
-    appId: '',
-    measurementId: '',
+    apiKey: 'AIzaSyB5yzey3k_C5FDS3Jmt2GloVBE72Cv8jeM',
+    authDomain: 'creative-studio-demo-481305.firebaseapp.com',
+    projectId: 'creative-studio-demo-481305',
+    storageBucket: 'creative-studio-demo-481305.firebasestorage.app',
+    messagingSenderId: '577666195296',
+    appId: '1:577666195296:web:9ca897156c5fcbb27dc805',
+    measurementId: 'G-8F1NZBHKYX',
   },
   production: true,
   isLocal: false,
-  backendURL: 'http://localhost:8080/api',
+  backendURL: 'https://cstudio-be-577666195296.us-central1.run.app/api',
   EMAIL_REGEX:
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
   ADMIN: 'admin',
-  GOOGLE_CLIENT_ID: '',
+  GOOGLE_CLIENT_ID: '577666195296-nqm6f8oaq2pnk3o4qjonoavu0t2g0kon.apps.googleusercontent.com',
 };
