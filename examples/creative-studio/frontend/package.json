@@ -36,7 +36,7 @@
     "@angular/platform-server": "^18.1.0",
     "@angular/router": "^18.1.0",
     "@angular/ssr": "^18.1.2",
-    "@enhance-eng/sandbox": "^0.3.20-beta.94284e2",
+    "@enhance-eng/sandbox": "^0.3.21",
     "express": "^4.18.2",
     "file-saver": "^2.0.5",
     "ngx-image-cropper": "^9.1.5",

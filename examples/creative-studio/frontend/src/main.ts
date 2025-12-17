@@ -20,6 +20,7 @@ import {Enhance} from '@enhance-eng/sandbox';
 import {AppModule} from './app/app.module';
 
 Enhance.init({
+  publishableKey: 'O-NOT-USE-THIS-PK-IN-A-REAL-APP',
   callbackBypass: ['/api/'],
 });
 
