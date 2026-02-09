@@ -15,14 +15,11 @@
  */
 
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {Enhance} from '@enhance-eng/sandbox';
+import {enhance} from '@enhance-eng/sandbox';
 
 import {AppModule} from './app/app.module';
 
-Enhance.init({
-  publishableKey: 'DO-NOT-USE-THIS-PK-IN-A-REAL-APP',
-  callbackBypass: ['/api/'],
-});
+enhance();
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule, {

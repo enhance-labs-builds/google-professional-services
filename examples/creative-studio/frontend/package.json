@@ -1,6 +1,7 @@
 {
   "name": "creative-studio",
   "version": "0.0.0",
+  "private": true,
   "scripts": {
     "ng": "ng",
     "start": "ng serve --configuration development",
@@ -21,10 +22,6 @@
     "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
     "check-format": "prettier --check \"src/**/*.{ts,html,scss,json}\""
   },
-  "engines": {
-    "node": ">=18.19 <21"
-  },
-  "private": true,
   "dependencies": {
     "@angular/animations": "^18.1.0",
     "@angular/cdk": "^18.2.1",
@@ -39,7 +36,7 @@
     "@angular/platform-server": "^18.1.0",
     "@angular/router": "^18.1.0",
     "@angular/ssr": "^18.1.2",
-    "@enhance-eng/sandbox": "^0.3.22",
+    "@enhance-eng/sandbox": "^0.5.5",
     "express": "^4.18.2",
     "file-saver": "^2.0.5",
     "ngx-image-cropper": "^9.1.5",
@@ -68,5 +65,8 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.5.2"
+  },
+  "engines": {
+    "node": ">=18.19 <21"
   }
 }
