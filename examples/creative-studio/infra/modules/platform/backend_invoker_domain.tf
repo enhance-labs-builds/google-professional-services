@@ -18,5 +18,5 @@ resource "google_cloud_run_v2_service_iam_member" "backend_invoker_domain" {
   name     = module.backend_service.service_name
   location = module.backend_service.location
   role     = "roles/run.invoker"
-  member   = "domain:enhancelabs.ai"
+  member   = "allAuthenticatedUsers"
 }
