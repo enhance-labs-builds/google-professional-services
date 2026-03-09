@@ -71,6 +71,7 @@ def configure_cors(app):
             f"Invalid ENVIRONMENT: {environment}. Must be 'production', 'development' or 'local'"
         )
 
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
