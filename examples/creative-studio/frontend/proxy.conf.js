@@ -1,11 +1,14 @@
 /**
- * Dynamic proxy config that reads BACKEND_URL from .env at dev-server startup.
+ * Proxy config for local-only development.
+ * When BACKEND_URL is set in .env, the frontend talks directly to the backend
+ * (no proxy needed). This proxy is only used when running locally without
+ * BACKEND_URL set, to avoid CORS issues against a local backend.
  */
 const path = require('path');
 const { loadEnv } = require('./scripts/parse-env');
 
 const FRONTEND_DIR = __dirname;
-const DEFAULT_BACKEND = 'https://cstudio-be-577666195296.us-central1.run.app';
+const DEFAULT_BACKEND = 'http://localhost:8000';
 
 const { env } = loadEnv(FRONTEND_DIR);
 const target = env.BACKEND_URL || DEFAULT_BACKEND;

@@ -161,8 +161,7 @@
               "proxyConfig": "proxy.conf.js"
             },
             "local": {
-              "buildTarget": "creative-studio:build:local",
-              "proxyConfig": "proxy.conf.js"
+              "buildTarget": "creative-studio:build:local"
             }
           },
           "defaultConfiguration": "development"
