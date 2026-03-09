@@ -324,7 +324,12 @@ class GeminiService:
         retry=retry_if_exception_type(Exception),
         reraise=True,
     )
-    def generate_text(self, prompt: str, model_id: Optional[str] = None) -> str:
+    def generate_text(
+        self,
+        prompt: str,
+        model_id: Optional[str] = None,
+        response_mime_type: str = "text/plain",
+    ) -> str:
         """
         Generates plain text from a given prompt using a Gemini model.
 
@@ -333,6 +338,7 @@ class GeminiService:
         Args:
             prompt: The text prompt to send to the model.
             model_id: Optional. The specific Gemini model ID to use, overriding the service default.
+            response_mime_type: Optional. The response MIME type (e.g., 'application/json').
 
         Returns:
             A string containing the generated text from the model.
@@ -348,9 +354,8 @@ class GeminiService:
             response = self.client.models.generate_content(
                 model=target_model,
                 contents=prompt,
-                # Configure for a simple text response without a schema
                 config=types.GenerateContentConfig(
-                    response_mime_type="text/plain"
+                    response_mime_type=response_mime_type
                 ),
             )
             logger.info("Successfully received text response from Gemini.")

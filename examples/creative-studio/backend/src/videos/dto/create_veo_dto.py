@@ -117,6 +117,10 @@ class CreateVeoDto(BaseDto):
         default=False,
         description="Whether to prepend brand guidelines to the prompt.",
     )
+    skip_prompt_enhancement: bool = Field(
+        default=False,
+        description="If true, the backend will skip server-side prompt enhancement and use the prompt as-is.",
+    )
     reference_images: Optional[list[ReferenceImageDto]] = Field(
         default=None,
         max_length=3,

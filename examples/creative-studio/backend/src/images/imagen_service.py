@@ -489,9 +489,12 @@ def _process_image_in_background(
                     gcs_output_directory = f"gs://{cfg.GENMEDIA_BUCKET}"
 
                     original_prompt = request_dto.prompt
-                    rewritten_prompt = await gemini_service.enhance_prompt_from_dto(
-                        dto=request_dto, target_type=PromptTargetEnum.IMAGE
-                    )
+                    if request_dto.skip_prompt_enhancement:
+                        rewritten_prompt = request_dto.prompt
+                    else:
+                        rewritten_prompt = await gemini_service.enhance_prompt_from_dto(
+                            dto=request_dto, target_type=PromptTargetEnum.IMAGE
+                        )
                     request_dto.prompt = rewritten_prompt
 
                     source_assets: List[SourceAssetLink] = []

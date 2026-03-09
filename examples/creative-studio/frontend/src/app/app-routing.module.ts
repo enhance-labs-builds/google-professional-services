@@ -16,50 +16,53 @@
 
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
-import {HomeComponent} from './home/home.component';
 import {LoginComponent} from './login/login.component';
 import {AuthGuardService} from './common/services/auth.guard.service';
-import {FunTemplatesComponent} from './fun-templates/fun-templates.component';
-import {VideoComponent} from './video/video.component';
 import {ArenaComponent} from './arena/arena.component';
-import {MediaGalleryComponent} from './gallery/media-gallery/media-gallery.component';
-import {MediaDetailComponent} from './gallery/media-detail/media-detail.component';
 import {AdminAuthGuard} from './admin/admin-auth.guard';
-import {VtoComponent} from './vto/vto.component';
-import {AudioComponent} from './audio/audio.component';
 
 const routes: Routes = [
   {path: 'login', component: LoginComponent},
-  {path: '', component: HomeComponent, canActivate: [AuthGuardService]},
-  {
-    path: 'fun-templates',
-    component: FunTemplatesComponent,
-    canActivate: [AuthGuardService],
-  },
-  {path: 'video', component: VideoComponent, canActivate: [AuthGuardService]},
-  {path: 'arena', component: ArenaComponent, canActivate: [AuthGuardService]},
-  {path: 'vto', component: VtoComponent, canActivate: [AuthGuardService]},
-  {path: 'audio', component: AudioComponent, canActivate: [AuthGuardService]},
-  // When a user goes to '/gallery', show the main feed.
-  {
-    path: 'gallery',
-    component: MediaGalleryComponent,
-  },
-  // When a user goes to '/gallery/some-unique-id', show the detail page.
-  // The ':id' is a placeholder for the media item's ID.
-  {
-    path: 'gallery/:id',
-    component: MediaDetailComponent,
-  },
-  // Optional: Redirect the base URL to the gallery
   {
     path: '',
-    redirectTo: '/gallery',
-    pathMatch: 'full',
+    loadChildren: () => import('./home/home.module').then(m => m.HomeModule),
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'fun-templates',
+    loadChildren: () =>
+      import('./fun-templates/fun-templates.module').then(
+        m => m.FunTemplatesModule,
+      ),
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'video',
+    loadChildren: () =>
+      import('./video/video.module').then(m => m.VideoModule),
+    canActivate: [AuthGuardService],
+  },
+  {path: 'arena', component: ArenaComponent, canActivate: [AuthGuardService]},
+  {
+    path: 'vto',
+    loadChildren: () => import('./vto/vto.module').then(m => m.VtoModule),
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'audio',
+    loadChildren: () =>
+      import('./audio/audio.module').then(m => m.AudioModule),
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'gallery',
+    loadChildren: () =>
+      import('./gallery/gallery.module').then(m => m.GalleryModule),
   },
   {
     path: 'admin',
-    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
+    loadChildren: () =>
+      import('./admin/admin.module').then(m => m.AdminModule),
     canActivate: [AdminAuthGuard],
   },
 ];

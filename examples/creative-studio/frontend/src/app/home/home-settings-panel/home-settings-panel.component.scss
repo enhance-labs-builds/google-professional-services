@@ -1,0 +1,18 @@
+.control-options mat-icon {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  transform: scale(1.5);
+}
+
+.menu-item-selected {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6, #f87171);
+}
+
+::ng-deep .mat-mdc-chip-action,
+::ng-deep .mat-mdc-chip-action-label {
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+}

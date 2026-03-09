@@ -1,0 +1,105 @@
+<!--
+ Copyright 2025 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<ng-container *ngIf="isLoading; else videoOrGallery">
+  <div class="video-container">
+    <div class="w-full h-full flex justify-center items-center">
+      <mat-progress-spinner
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #videoOrGallery>
+  <ng-container *ngIf="activeVideoJob$ | async as job">
+    <div
+      *ngIf="job.status === JobStatus.PROCESSING"
+      class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black bg-opacity-70 rounded-xl"
+    >
+      <mat-progress-spinner
+        color="primary"
+        mode="indeterminate"
+        [diameter]="50"
+      ></mat-progress-spinner>
+      <p class="!mt-6 text-white text-lg">
+        Your video is being generated...
+      </p>
+      <p class="text-gray-400 text-sm">
+        This may take a few minutes. You can safely navigate away.
+      </p>
+    </div>
+
+    <div
+      *ngIf="job.status === JobStatus.FAILED && showErrorOverlay"
+      class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black bg-opacity-70 rounded-xl text-center p-4"
+    >
+      <mat-icon class="text-red-500 !w-16 !h-16 !text-6xl"
+        >error_outline</mat-icon
+      >
+      <p class="mt-4 text-white text-lg">Video Generation Failed</p>
+      <p class="text-gray-400 text-sm max-w-md">
+        {{ job.errorMessage || job.error_message }}
+      </p>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="closeError.emit()"
+        class="mt-4"
+      >
+        Close
+      </button>
+    </div>
+
+    <!-- Video Gallery -->
+    <app-media-lightbox
+      *ngIf="job.status === JobStatus.COMPLETED"
+      [mediaItem]="job"
+      [initialIndex]="0"
+      [showSeeMoreInfoButton]="true"
+      (extendWithAiClicked)="extendWithAiClicked.emit($event)"
+      (concatenateClicked)="concatenateClicked.emit($event)"
+      style="max-height: 60vh"
+    ></app-media-lightbox>
+  </ng-container>
+
+  <ng-container
+    *ngIf="(activeVideoJob$ | async)?.status !== JobStatus.COMPLETED"
+  >
+    <div class="video-container">
+      <video
+        class="w-full rounded-xl"
+        oncanplay="this.play()"
+        onloadedmetadata="this.muted = true"
+        muted
+        playsinline
+        loop
+        autoplay
+      >
+        <source
+          src="assets/videos/generate-video-homepage-video.mp4"
+          type="video/mp4"
+        />
+      </video>
+      <div
+        class="top-[40%] md:top-[20%] lg:top-[30%] xl:top-[40%] absolute w-full text-center justify-center text-3xl md:text-6xl font-bold bg-gradient-to-r from-blue-500 via-violet-500 to-red-400 bg-clip-text text-transparent"
+      >
+        Generate Video Ads
+      </div>
+    </div>
+  </ng-container>
+</ng-template>

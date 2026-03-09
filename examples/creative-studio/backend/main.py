@@ -40,6 +40,7 @@ from src.media_templates.media_templates_controller import (
     router as media_template_router,
 )
 from src.multimodal.gemini_controller import router as gemini_router
+from src.multimodal.llm_proxy_controller import router as llm_proxy_router
 from src.source_assets.source_asset_controller import (
     router as source_asset_router,
 )
@@ -168,3 +169,4 @@ app.include_router(media_template_router)
 app.include_router(source_asset_router)
 app.include_router(workspace_router)
 app.include_router(brand_guideline_router)
+app.include_router(llm_proxy_router)

@@ -134,9 +134,12 @@ def _process_video_in_background(
                         cfg = config_service
                         gcs_output_directory = f"gs://{cfg.GENMEDIA_BUCKET}"
 
-                        rewritten_prompt = await gemini_service.enhance_prompt_from_dto(
-                            dto=request_dto, target_type=PromptTargetEnum.VIDEO
-                        )
+                        if request_dto.skip_prompt_enhancement:
+                            rewritten_prompt = request_dto.prompt
+                        else:
+                            rewritten_prompt = await gemini_service.enhance_prompt_from_dto(
+                                dto=request_dto, target_type=PromptTargetEnum.VIDEO
+                            )
                         original_prompt = request_dto.prompt
                         request_dto.prompt = rewritten_prompt
 

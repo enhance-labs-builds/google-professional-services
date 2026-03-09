@@ -30,6 +30,7 @@ export type ImagenRequest = {
   sourceMediaItems?: SourceMediaItemLink[];
   workspaceId?: string;
   useBrandGuidelines: boolean;
+  skipPromptEnhancement?: boolean;
   googleSearch?: boolean;
   resolution?: '1K' | '2K' | '4K';
 };
@@ -70,6 +71,7 @@ export type VeoRequest = {
   sourceMediaItems?: SourceMediaItemLink[];
   workspaceId?: string;
   useBrandGuidelines: boolean;
+  skipPromptEnhancement?: boolean;
   referenceImages?: ReferenceImageDto[];
 };
 

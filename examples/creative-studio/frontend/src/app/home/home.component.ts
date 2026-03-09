@@ -16,14 +16,11 @@
 
 import { HttpClient } from '@angular/common/http';
 import {
-  AfterViewInit,
   Component,
-  ElementRef,
   HostListener,
   Inject,
   OnDestroy,
   OnInit,
-  ViewChild,
 } from '@angular/core';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
@@ -31,7 +28,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NavigationExtras, Router } from '@angular/router';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, switchMap } from 'rxjs';
 import { AssetTypeEnum } from '../admin/source-assets-management/source-asset.model';
 import { ImageCropperDialogComponent } from '../common/components/image-cropper-dialog/image-cropper-dialog.component';
 import {
@@ -54,17 +51,21 @@ import { WorkspaceStateService } from '../services/workspace/workspace-state.ser
 import { ImageStateService } from '../services/image-state.service';
 import { handleErrorSnackbar, handleSuccessSnackbar, handleInfoSnackbar } from '../utils/handleMessageSnackbar';
 import { MODEL_CONFIGS, GenerationModelConfig } from '../common/config/model-config';
+import { PromptComposerService } from '../common/services/prompt-composer/prompt-composer.service';
+import { LlmService } from '../common/services/llm/llm.service';
+import { buildImageTextRewritePrompt, RANDOM_IMAGE_PROMPT_TEMPLATE } from '../common/prompts/random-and-rewrite.prompt';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
+export class HomeComponent implements OnInit, OnDestroy {
   // --- Component State ---
   imagenDocuments: MediaItem | null = null;
   isLoading = false;
   isImageGenerating = false;
+  generationStatusMessage = '';
   templateParams: GenerationParameters | undefined;
   showDefaultDocuments = false;
   referenceImages: ReferenceImage[] = [];
@@ -233,16 +234,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     o => o.value === this.searchRequest.addWatermark,
   )!.viewValue;
 
-  // --- Private properties for animation and gallery ---
-  private curX = 0;
-  private curY = 0;
-  private tgX = 0;
-  private tgY = 0;
-  private animationFrameId: number | undefined;
-
-  @ViewChild('interactiveBubble') interBubble!: ElementRef<HTMLDivElement>;
-  @ViewChild('promptBoxTarget') promptBoxTarget!: ElementRef<HTMLDivElement>;
-
   constructor(
     public router: Router,
     private sanitizer: DomSanitizer,
@@ -254,6 +245,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     @Inject(WorkspaceStateService)
     private workspaceStateService: WorkspaceStateService,
     private imageStateService: ImageStateService,
+    private promptComposerService: PromptComposerService,
+    private llmService: LlmService,
   ) {
     this.matIconRegistry
       .addSvgIcon(
@@ -320,33 +313,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
-  ngAfterViewInit(): void {
-    // This hook is called after the component's view has been initialized.
-    // Now we can be sure that 'interBubble' is available.
-    if (this.interBubble && this.interBubble.nativeElement) {
-      this.move();
-    } else {
-      console.warn(
-        'Interactive bubble element not found. Animation may not start.',
-      );
-    }
-  }
-
-  ngOnDestroy(): void {
-    if (typeof window !== 'undefined')
-      window.removeEventListener('mousemove', this.onMouseMove);
-
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-    }
-  }
+  ngOnDestroy(): void {}
 
   ngOnInit(): void {
-    // Set up event listener here, but don't start animation yet
-    // As this should be browser code we check first if window exists
-    if (typeof window !== 'undefined')
-      window.addEventListener('mousemove', this.onMouseMove);
-
     // Restore state from service
     this.imageStateService.state$.subscribe(state => {
       this.searchRequest.prompt = state.prompt;
@@ -726,15 +695,28 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.isImageGenerating = true;
     this.imagenDocuments = null;
+    this.generationStatusMessage = 'Enhancing prompt...';
 
-    this.service
-      .startImagenGeneration(payload)
-      .pipe(finalize(() => (this.isLoading = false)))
+    this.promptComposerService
+      .enhanceImagePrompt(payload, activeWorkspaceId)
+      .pipe(
+        switchMap(enhancedPrompt => {
+          payload.prompt = enhancedPrompt;
+          payload.skipPromptEnhancement = true;
+          this.generationStatusMessage = 'Generating...';
+          return this.service.startImagenGeneration(payload);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+          this.generationStatusMessage = '';
+        }),
+      )
       .subscribe({
         next: (initialResponse: MediaItem) => {
           console.log('Image generation job started:', initialResponse);
         },
         error: error => {
+          this.isImageGenerating = false;
           handleErrorSnackbar(this._snackBar, error, 'Search');
         },
       });
@@ -746,15 +728,13 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isLoading = true;
     const promptToSend = this.searchRequest.prompt;
     this.searchRequest.prompt = '';
-    this.service
-      .rewritePrompt({
-        targetType: 'image',
-        userPrompt: promptToSend,
-      })
+    const fullPrompt = buildImageTextRewritePrompt(promptToSend);
+    this.llmService
+      .generateContent(fullPrompt)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (response: { prompt: string }) => {
-          this.searchRequest.prompt = response.prompt;
+        next: (rewrittenPrompt: string) => {
+          this.searchRequest.prompt = rewrittenPrompt;
           this.saveState();
         },
         error: error => {
@@ -766,12 +746,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   getRandomPrompt() {
     this.isLoading = true;
     this.searchRequest.prompt = '';
-    this.service
-      .getRandomPrompt({ target_type: 'image' })
+    this.llmService
+      .generateContent(RANDOM_IMAGE_PROMPT_TEMPLATE)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (response: { prompt: string }) => {
-          this.searchRequest.prompt = response.prompt;
+        next: (randomPrompt: string) => {
+          this.searchRequest.prompt = randomPrompt;
           this.saveState();
         },
         error: error => {
@@ -918,22 +898,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.saveState();
     }
   }
-
-  private onMouseMove = (event: MouseEvent) => {
-    this.tgX = event.clientX;
-    this.tgY = event.clientY;
-  };
-
-  private move = () => {
-    this.curX += (this.tgX - this.curX) / 20;
-    this.curY += (this.tgY - this.curY) / 20;
-
-    if (this.interBubble && this.interBubble.nativeElement) {
-      this.interBubble.nativeElement.style.transform = `translate(${Math.round(this.curX)}px, ${Math.round(this.curY)}px)`;
-    }
-
-    this.animationFrameId = requestAnimationFrame(this.move);
-  };
 
   openImageSelector(index?: number) {
     const dialogRef = this.dialog.open(ImageSelectorComponent, {

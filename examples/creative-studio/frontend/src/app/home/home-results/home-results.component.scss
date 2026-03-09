@@ -1,0 +1,49 @@
+.title-font {
+  font-size: 1.2rem;
+}
+
+.video-container {
+  height: 15vh;
+  overflow: hidden;
+  position: relative;
+  border-radius: 1rem;
+
+  video {
+    margin-top: -15%;
+  }
+}
+
+// Small devices (landscape phones, 576px and up)
+@media (min-width: 375px) {
+  .title-font {
+    font-size: 1.4rem;
+  }
+}
+
+@media (min-width: 425px) {
+  .title-font {
+    font-size: 1.7rem;
+  }
+}
+
+@media (min-width: 576px) {
+  .title-font {
+    font-size: 1.5rem;
+  }
+}
+
+// Medium devices (tablets, 768px and up)
+@media (min-width: 768px) {
+  .video-container {
+    height: 45vh;
+  }
+}
+
+// 4K Displays
+@media screen and (min-width: 2160px) {
+  .video-container {
+    video {
+      margin-top: -10%;
+    }
+  }
+}

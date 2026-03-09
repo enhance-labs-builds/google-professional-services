@@ -96,6 +96,10 @@ class CreateImagenDto(BaseDto):
         default=False,
         description="Whether to prepend brand guidelines to the prompt.",
     )
+    skip_prompt_enhancement: bool = Field(
+        default=False,
+        description="If true, the backend will skip server-side prompt enhancement and use the prompt as-is.",
+    )
     google_search: bool = Field(
         default=False,
         description="Whether to use Google Search for image generation.",

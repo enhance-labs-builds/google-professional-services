@@ -52,20 +52,13 @@
               "src/styles.scss",
               "node_modules/photoswipe/src/photoswipe.css"
             ],
-            "scripts": [],
-            "server": "src/main.server.ts",
-            "prerender": true,
-            "ssr": {
-              "entry": "server.ts"
-            }
+            "scripts": []
           },
           "configurations": {
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "ssr": false,
-              "prerender": false,
               "namedChunks": true,
               "fileReplacements": [
                 {
@@ -141,6 +134,18 @@
                 }
               ],
               "outputHashing": "all"
+            },
+            "local": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.local.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "development"
@@ -152,7 +157,12 @@
               "buildTarget": "creative-studio:build:production"
             },
             "development": {
-              "buildTarget": "creative-studio:build:development"
+              "buildTarget": "creative-studio:build:development",
+              "proxyConfig": "proxy.conf.js"
+            },
+            "local": {
+              "buildTarget": "creative-studio:build:local",
+              "proxyConfig": "proxy.conf.js"
             }
           },
           "defaultConfiguration": "development"

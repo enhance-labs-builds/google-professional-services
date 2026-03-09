@@ -24,7 +24,7 @@ import {
 } from '@angular/core';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {finalize, Observable} from 'rxjs';
+import {finalize, Observable, switchMap} from 'rxjs';
 import {
   ConcatenationInput,
   SearchService,
@@ -58,6 +58,9 @@ import { MODEL_CONFIGS, GenerationModelConfig } from '../common/config/model-con
 import {AssetTypeEnum} from '../admin/source-assets-management/source-asset.model';
 import {ImageCropperDialogComponent} from '../common/components/image-cropper-dialog/image-cropper-dialog.component';
 import {VideoStateService} from '../services/video-state.service';
+import {PromptComposerService} from '../common/services/prompt-composer/prompt-composer.service';
+import {LlmService} from '../common/services/llm/llm.service';
+import {buildVideoTextRewritePrompt, RANDOM_VIDEO_PROMPT_TEMPLATE} from '../common/prompts/random-and-rewrite.prompt';
 
 @Component({
   selector: 'app-video',
@@ -83,6 +86,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
   videoDocuments: MediaItem | null = null;
   isLoading = false;
   isAudioGenerationDisabled = false;
+  generationStatusMessage = '';
   startImageAssetId: number | null = null;
   endImageAssetId: number | null = null;
   sourceMediaItems: (SourceMediaItemLink | null)[] = [null, null];
@@ -197,6 +201,8 @@ export class VideoComponent implements OnInit, AfterViewInit {
     private workspaceStateService: WorkspaceStateService,
     private sourceAssetService: SourceAssetService,
     private videoStateService: VideoStateService,
+    private promptComposerService: PromptComposerService,
+    private llmService: LlmService,
   ) {
     this.activeVideoJob$ = this.service.activeVideoJob$;
 
@@ -580,6 +586,7 @@ export class VideoComponent implements OnInit, AfterViewInit {
 
     this.isLoading = true;
     this.videoDocuments = null;
+    this.generationStatusMessage = 'Enhancing prompt...';
 
     const validSourceMediaItems = this.sourceMediaItems.filter(
       (i): i is SourceMediaItemLink => !!i,
@@ -639,19 +646,25 @@ export class VideoComponent implements OnInit, AfterViewInit {
             : undefined,
     };
 
-    // TODO: Add notification when video is completed after the pooling
-    this.service
-      .startVeoGeneration(payload)
-      .pipe(finalize(() => (this.isLoading = false)))
+    this.promptComposerService
+      .enhanceVideoPrompt(payload, workspaceId)
+      .pipe(
+        switchMap(enhancedPrompt => {
+          payload.prompt = enhancedPrompt;
+          payload.skipPromptEnhancement = true;
+          this.generationStatusMessage = 'Generating...';
+          return this.service.startVeoGeneration(payload);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+          this.generationStatusMessage = '';
+        }),
+      )
       .subscribe({
         next: (initialResponse: MediaItem) => {
-          // This logic is now handled by the 'tap' operator in the service,
-          // but it's fine to also have it here. The key is the 'error' block.
           console.log('Job started successfully:', initialResponse);
-          // The component's main display will be driven by the service's observable
         },
         error: error => {
-          // This block will now execute correctly if the POST request fails.
           console.error('Search error:', error);
           handleErrorSnackbar(this._snackBar, error, 'Search');
         },
@@ -664,15 +677,13 @@ export class VideoComponent implements OnInit, AfterViewInit {
     this.isLoading = true;
     const promptToSend = this.searchRequest.prompt;
     this.searchRequest.prompt = '';
-    this.service
-      .rewritePrompt({
-        targetType: 'video',
-        userPrompt: promptToSend,
-      })
+    const fullPrompt = buildVideoTextRewritePrompt(promptToSend);
+    this.llmService
+      .generateContent(fullPrompt)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (response: {prompt: string}) => {
-          this.searchRequest.prompt = response.prompt;
+        next: (rewrittenPrompt: string) => {
+          this.searchRequest.prompt = rewrittenPrompt;
           this.saveState();
         },
         error: error => {
@@ -684,12 +695,12 @@ export class VideoComponent implements OnInit, AfterViewInit {
   getRandomPrompt() {
     this.isLoading = true;
     this.searchRequest.prompt = '';
-    this.service
-      .getRandomPrompt({target_type: 'video'})
+    this.llmService
+      .generateContent(RANDOM_VIDEO_PROMPT_TEMPLATE)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (response: {prompt: string}) => {
-          this.searchRequest.prompt = response.prompt;
+        next: (randomPrompt: string) => {
+          this.searchRequest.prompt = randomPrompt;
           this.saveState();
         },
         error: error => {
