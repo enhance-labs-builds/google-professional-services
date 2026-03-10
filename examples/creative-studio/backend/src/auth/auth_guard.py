@@ -60,16 +60,25 @@ async def get_current_user(
             logger.info("Verifying token using Firebase Admin SDK...")
             decoded_token = await asyncio.to_thread(auth.verify_id_token, token)
         else:
-            # --- Development/Production: Use Google Identity Platform (OIDC) ---
-            # Verifies the Google-issued OIDC ID token. The audience must be the
-            # OAuth 2.0 client ID of the Identity Platform-protected resource.
+            # --- Development/Production ---
+            # Try Google Identity Platform (OIDC) first, fall back to Firebase
+            # Auth. This supports both Google One Tap tokens and Firebase
+            # signInWithPopup tokens (e.g. from dev server via service worker).
             GOOGLE_TOKEN_AUDIENCE = config_service.GOOGLE_TOKEN_AUDIENCE
-            decoded_token = await asyncio.to_thread(
-                id_token.verify_oauth2_token,
-                token,
-                google_auth_requests.Request(),
-                audience=GOOGLE_TOKEN_AUDIENCE,
-            )
+            try:
+                decoded_token = await asyncio.to_thread(
+                    id_token.verify_oauth2_token,
+                    token,
+                    google_auth_requests.Request(),
+                    audience=GOOGLE_TOKEN_AUDIENCE,
+                )
+            except Exception as oidc_err:
+                logger.info(
+                    f"OIDC verification failed ({oidc_err}), trying Firebase Auth..."
+                )
+                decoded_token = await asyncio.to_thread(
+                    auth.verify_id_token, token
+                )
 
         email = decoded_token.get("email")
         name = decoded_token.get("name")
